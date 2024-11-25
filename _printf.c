@@ -1,104 +1,82 @@
 #include "main.h"
-#include <stdlib.h>  /* For malloc and free */
+#include <unistd.h>
+#include <stdarg.h>
+#include <stdlib.h>
 
 /**
- * print_number - Prints an integer to stdout using recursion.
- * @n: The integer to print.
- */
-void print_number(int n)
-{
-    char c;
-
-    if (n < 0)
-    {
-        write(1, "-", 1);
-        n = -n;
-    }
-
-    if (n / 10 != 0)
-        print_number(n / 10);
-
-    c = (n % 10) + '0';
-    write(1, &c, 1);
-}
-
-/**
- * _printf - Custom printf function to handle %c, %s, %d, %i, %%.
- * @format: The format string containing the characters and specifiers.
+ * _printf - Custom implementation of printf for Task One.
+ * @format: The format string containing characters and specifiers.
  *
- * Return: The number of characters printed (excluding the null byte).
+ * Return: Number of characters printed (excluding the null byte).
  */
 int _printf(const char *format, ...)
 {
-    int count = 0, i;
+    int count = 0; 
     va_list args;
     const char *ptr;
     char *buffer;
-    int buffer_size = 1024;
-
-    /* Allocate memory for the buffer */
-    buffer = malloc(buffer_size);
-    if (buffer == NULL)
-        return (-1);
-
-    va_start(args, format);
 
     if (format == NULL)
-    {
-        free(buffer);
         return (-1);
-    }
+
+  
+    buffer = malloc(1024 * sizeof(char));
+    if (buffer == NULL)
+        return (-1); 
+
+    va_start(args, format);
 
     for (ptr = format; *ptr != '\0'; ptr++)
     {
         if (*ptr == '%')
         {
-            ptr++;
-            if (*ptr == 'c')  /* Handle %c */
+            ptr++; 
+            if (*ptr == 'c') 
             {
                 char c = va_arg(args, int);
                 buffer[count++] = c;
             }
-            else if (*ptr == 's')  /* Handle %s */
+            else if (*ptr == 's')
             {
                 char *str = va_arg(args, char *);
+                int i;
+
                 if (str == NULL)
                     str = "(null)";
-                for (i = 0; str[i] != '\0'; i++)
-                    buffer[count++] = str[i];
+                for (i = 0; str[i] != '\0'; i++, count++)
+                    buffer[count] = str[i];
             }
-            else if (*ptr == '%')  /* Handle %% */
+            else if (*ptr == '%') 
             {
                 buffer[count++] = '%';
             }
-            else if (*ptr == 'd' || *ptr == 'i')  /* Handle %d and %i */
-            {
-                int num = va_arg(args, int);
-                print_number(num); /* Print the integer directly */
-            }
-        }
-        else
-        {
-            buffer[count++] = *ptr;
-        }
-
-        /* Reallocate buffer if it's full */
-        if (count >= buffer_size)
-        {
-            buffer_size *= 2;
-            buffer = realloc(buffer, buffer_size);
-            if (buffer == NULL)
+            else 
             {
                 free(buffer);
                 return (-1);
             }
         }
+        else 
+        {
+            buffer[count++] = *ptr;
+        }
+
+        if (count >= 1024)
+        {
+            char *new_buffer = realloc(buffer, 2048); 
+            if (new_buffer == NULL)
+            {
+                free(buffer);
+                return (-1); 
+            }
+            buffer = new_buffer;
+        }
     }
 
-    /* Write the formatted output from the buffer */
+  
     write(1, buffer, count);
+    free(buffer);
 
     va_end(args);
-    free(buffer);  /* Free allocated memory */
     return (count);
 }
